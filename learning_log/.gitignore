@@ -1,0 +1,12 @@
+# Python virtual environment
+11_env/
+
+# Database file
+db.sqlite3
+
+# macOS Finder file
+.DS_Store
+
+# Python cache files
+__pycache__/
+*.pyc
