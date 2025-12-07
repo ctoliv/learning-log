@@ -8,15 +8,84 @@
   <p>
     <a href="{% url 'learning_logs:new_entry' topic.id %}">Add new entry</a>
   </p>
+  <!-- NEW: total hours for this topic -->
+  <p>
+    <strong>Total hours studied on this topic:</strong>
+    {{ total_hours }} hours ({{ total_minutes }} minutes)
+  </p>
+  <p>
+  <strong>Average hours per study session:</strong>
+  {{ avg_hours|floatformat:1 }} hours
+   </p>
+
+   {% if entries %}
+  <h4>Study time per session</h4>
+  <canvas id="hoursChart" style="max-width: 600px; max-height: 300px;"></canvas>
+
+  <!-- Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    const ctx = document.getElementById('hoursChart').getContext('2d');
+
+    // Labels: use study_date (like "Dec 01") for each entry
+    const labels = [
+      {% for entry in entries %}
+        '{{ entry.study_date|date:"M d" }}'{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    ];
+
+    // Data: hours spent for each entry
+    const data = [
+      {% for entry in entries %}
+        {{ entry.hours_spent|floatformat:1 }}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    ];
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Hours spent',
+          data: data,
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Hours'
+            }
+          }
+        }
+      }
+    });
+  </script>
+{% endif %}
 
   {% for entry in entries %}
     <div class="card mb-3">
       <h4 class="card-header">
         {{ entry.date_added|date:'M d, Y H:i' }}
-        <small><a href="{% url 'learning_logs:edit_entry' entry.id %}">
-            edit entry</a></small>
+        <small>
+          <a href="{% url 'learning_logs:edit_entry' entry.id %}">
+            edit entry
+          </a>
+        </small>
       </h4>
       <div class="card-body">
+        <!-- NEW: study info for this entry -->
+        <p><strong>Date studied:</strong> {{ entry.study_date|date:"M d, Y" }}</p>
+        {% if entry.study_date %}
+          <p><em>{{ entry.study_date|timesince }} ago</em></p>
+        {% endif %}
+        <p><strong>Location:</strong> {{ entry.get_study_location_display }}</p>
+        <p><strong>Hours spent:</strong> {{ entry.hours_spent }}</p>
+        <hr>
+        <!-- Existing entry text -->
         {{ entry.text|linebreaks }}
       </div>
     </div>
